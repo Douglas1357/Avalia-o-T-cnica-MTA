@@ -1,0 +1,34 @@
+//na linha abaixo realizei a importação da biblioteca Puppeteer, que vai ser utilizado no projeto
+const puppeteer = require('puppeteer');
+//Na linha abaixo define uma função que será executada imediatamente, que seria uma função assícrona(uma função que permite que outros eventos aconteça ao mesmo tempo, em vez de aguardar uma ser finalizada para iniciar outra)
+(async () => {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+//na linha abaixo está navegando pela pagina na internet
+  await page.goto('https://pt.wikipedia.org/wiki/Lista_de_munic%C3%ADpios_do_Brasil_por_popula%C3%A7%C3%A3o_(2022)');
+// nas linha abaixo, ele está selecionando todas as linhas das tabelas que contem informações no wikipedia
+  const Municipios = await page.evaluate(() => {
+    const rows = Array.from(document.querySelectorAll('#mw-content-text table.wikitable tbody tr'));
+//aqui ele retorna um novo array,mapeando cada linha de informações das cidades
+    return rows.slice(0).map(row => {
+      const columns = row.querySelectorAll('td');
+//na linha abaixo ele está verificando se realmente contém pelo menos 5 colunas, para ser uma uma linha válida e extrair as informações de cada coluna.
+//OBS:são 5 colunas que se inicia na 0(coluna 1 dentro do wikipedia) e vai até a 4(sendo a ultima coluna)
+      if (columns.length >= 5) {
+        const Município = columns[2].textContent.trim();
+        const População = columns[4].textContent.trim();
+        const UF = columns[3].textContent.trim();
+//na linha abaixo ele está retornando as informações que foram solicitadas. caso fosse preciso de colocar todas as informações era só completar com o codigo acima e prencheencer abaixo o restante das infomrações  
+        return { Município, População, UF };
+//caso a lilha não tenha dados suficientes será um retorno de informação vazia(null)     
+      } else {
+        return null;
+      }
+//está filtrando para trazer os municipios nulos      
+    }).filter(Municipios => Municipios !== null);
+  });
+//exibir os municipios no terminal(coloquei em formato de tabela para ficar mais bonito a visualização)
+  console.table(Municipios);
+//abaixo estou fechando a biblioteca puppeteer
+  await browser.close();
+})();
